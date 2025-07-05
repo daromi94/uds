@@ -1,0 +1,19 @@
+version: "3"
+
+vars:
+  BUILD_DIR: bin
+  EXECUTABLE: uds_server
+
+tasks:
+  default:
+    cmd: task -a
+
+  build:
+    cmds:
+      - test -d {{.BUILD_DIR}} || mkdir {{.BUILD_DIR}}
+      - gcc -Wall -o {{.BUILD_DIR}}/{{.EXECUTABLE}} src/main.c
+
+  execute:
+    deps:
+      - build
+    cmd: ./{{.BUILD_DIR}}/{{.EXECUTABLE}}
