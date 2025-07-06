@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     int sock = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sock == -1)
     {
-        perror("failed to create socket");
+        perror("creating socket");
         exit(EX_OSERR);
     }
 
