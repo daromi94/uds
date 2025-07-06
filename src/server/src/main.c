@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #define SOCKET_PATH "/tmp/uds.sock"
+#define DATA "Fear is the mind-killer. Fear is the little-death that brings total obliteration.\n"
 
 int main(int argc, char *argv[])
 {
