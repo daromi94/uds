@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <sysexits.h>
 
 #include <sys/socket.h>
@@ -7,25 +8,16 @@
 
 #define SOCKET_PATH "/tmp/uds.sock"
 
-int start()
-{
-    unlink(SOCKET_PATH);
-
-    int server_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (server_fd == -1)
-    {
-        // TODO: write error to stderr
-        return EX_IOERR;
-    }
-
-    return EX_OK;
-}
-
 int main(int argc, char *argv[])
 {
-    printf("starting server...\n");
+    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sock == -1)
+    {
+        perror("failed to create socket");
+        exit(EX_OSERR);
+    }
 
-    int exit_status = start();
+    close(sock);
 
-    return exit_status;
+    return EX_OK;
 }
