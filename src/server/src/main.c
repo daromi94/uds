@@ -9,11 +9,18 @@
 #include <unistd.h>
 
 #define SOCKET_FILE_PATH "/tmp/uds.sock"
+#define SOCKET_BACKLOG 100
 #define DATA "Fear is the mind-killer. Fear is the little-death that brings total obliteration.\n"
 
-void remove_stale_socket_file(const char *socket_file_path)
+typedef struct BoundSocket
 {
-    if (unlink(socket_file_path) == -1)
+    const int fd;
+    const char *file_path;
+} BoundSocket;
+
+void remove_stale_socket_file(const char *file_path)
+{
+    if (unlink(file_path) == -1)
     {
         if (errno != ENOENT)
         {
@@ -23,9 +30,9 @@ void remove_stale_socket_file(const char *socket_file_path)
     }
 }
 
-void remove_socket_file(const char *socket_file_path)
+void remove_socket_file(const char *file_path)
 {
-    if (unlink(socket_file_path) == -1)
+    if (unlink(file_path) == -1)
     {
         perror("removing socket file");
         exit(EX_OSERR);
@@ -34,55 +41,58 @@ void remove_socket_file(const char *socket_file_path)
 
 int create_socket()
 {
-    const int socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (socket_fd == -1)
+    const int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (fd == -1)
     {
         perror("creating socket");
         exit(EX_OSERR);
     }
-    return socket_fd;
+    return fd;
 }
 
-void close_socket(const int socket_fd)
+void close_socket(const int fd)
 {
-    if (close(socket_fd) == -1)
+    if (close(fd) == -1)
     {
         perror("closing socket");
         exit(EX_OSERR);
     }
 }
 
-void bind_socket_name(const int socket_fd, const char *socket_file_path)
+BoundSocket bind_socket(const int fd, const char *file_path)
 {
     struct sockaddr_un socket_address;
     socket_address.sun_family = AF_UNIX;
-    strcpy(socket_address.sun_path, socket_file_path);
+    strcpy(socket_address.sun_path, file_path); // FIXME: buffer overflow
 
-    if (bind(socket_fd, (const struct sockaddr *)&socket_address, sizeof(struct sockaddr_un)) == -1)
+    if (bind(fd, (const struct sockaddr *)&socket_address, sizeof(struct sockaddr_un)) == -1)
     {
         perror("binding socket");
-        close_socket(socket_fd);
+        close_socket(fd);
         exit(EX_OSERR);
     }
+
+    return (BoundSocket){.fd = fd, .file_path = file_path};
+}
+
+void clean_bound_socket(const BoundSocket bound_socket)
+{
+    close_socket(bound_socket.fd);
+    remove_socket_file(bound_socket.file_path);
 }
 
 int main(int argc, char *argv[])
 {
     const char *socket_file_path = SOCKET_FILE_PATH;
-
     remove_stale_socket_file(socket_file_path);
 
-    int socket_fd = create_socket();
+    const int socket_fd = create_socket();
     fprintf(stdout, "socket created (fd: %d)\n", socket_fd);
 
-    bind_socket_name(socket_fd, socket_file_path);
-    fprintf(stdout, "socket bound to file (path: %s)\n", socket_file_path);
+    BoundSocket bound_socket = bind_socket(socket_fd, socket_file_path);
+    fprintf(stdout, "socket bound to file (path: %s)\n", bound_socket.file_path);
 
-    close_socket(socket_fd);
-    fprintf(stdout, "socket closed (fd: %d)\n", socket_fd);
-
-    remove_socket_file(socket_file_path);
-    fprintf(stdout, "socket file path removed (path: %s)\n", socket_file_path);
+    clean_bound_socket(bound_socket);
 
     return EX_OK;
 }
