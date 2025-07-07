@@ -61,11 +61,11 @@ void close_socket(const int fd)
 
 BoundSocket bind_socket(const int fd, const char *file_path)
 {
-    struct sockaddr_un socket_address;
-    socket_address.sun_family = AF_UNIX;
-    strcpy(socket_address.sun_path, file_path); // FIXME: buffer overflow
+    struct sockaddr_un address;
+    address.sun_family = AF_UNIX;
+    strcpy(address.sun_path, file_path); // FIXME: buffer overflow
 
-    if (bind(fd, (const struct sockaddr *)&socket_address, sizeof(struct sockaddr_un)) == -1)
+    if (bind(fd, (const struct sockaddr *)&address, sizeof(struct sockaddr_un)) == -1)
     {
         perror("binding socket");
         close_socket(fd);
