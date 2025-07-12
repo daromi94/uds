@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
     const int socket_fd = create_socket();
     fprintf(stdout, "socket created (fd: %d)\n", socket_fd);
 
-    BoundSocket bound_socket = bind_socket(socket_fd, socket_file_path);
+    const BoundSocket bound_socket = bind_socket(socket_fd, socket_file_path);
     fprintf(stdout, "socket bound to file (path: %s)\n", bound_socket.file_path);
 
     clean_bound_socket(bound_socket);
