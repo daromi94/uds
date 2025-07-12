@@ -1,9 +1,9 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sysexits.h>
-#include <errno.h>
 
+#include <sysexits.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
@@ -11,12 +11,6 @@
 #define SOCKET_FILE_PATH "/tmp/uds.sock"
 #define SOCKET_BACKLOG 100
 #define DATA "Fear is the mind-killer. Fear is the little-death that brings total obliteration.\n"
-
-typedef struct BoundSocket
-{
-    const int fd;
-    const char *file_path;
-} BoundSocket;
 
 void remove_stale_socket_file(const char *file_path)
 {
@@ -27,15 +21,6 @@ void remove_stale_socket_file(const char *file_path)
             perror("removing stale socket file");
             exit(EX_OSERR);
         }
-    }
-}
-
-void remove_socket_file(const char *file_path)
-{
-    if (unlink(file_path) == -1)
-    {
-        perror("removing socket file");
-        exit(EX_OSERR);
     }
 }
 
@@ -50,6 +35,15 @@ int create_socket()
     return fd;
 }
 
+void remove_socket_file(const char *file_path)
+{
+    if (unlink(file_path) == -1)
+    {
+        perror("removing socket file");
+        exit(EX_OSERR);
+    }
+}
+
 void close_socket(const int fd)
 {
     if (close(fd) == -1)
@@ -58,6 +52,12 @@ void close_socket(const int fd)
         exit(EX_OSERR);
     }
 }
+
+typedef struct BoundSocket
+{
+    const int fd;
+    const char *file_path;
+} BoundSocket;
 
 BoundSocket bind_socket(const int fd, const char *file_path)
 {
